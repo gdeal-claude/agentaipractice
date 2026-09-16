@@ -5,6 +5,7 @@
     stockmom add 삼성전자 005930 10 70000   보유 종목 등록
     stockmom watch 애플 AAPL              관심 종목 등록
     stockmom list                         등록된 종목 보기
+    stockmom status                       현재가·손익 JSON (AI 호출 없음, 루틴용)
 """
 
 from __future__ import annotations
@@ -56,6 +57,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     lst = sub.add_parser("list", help="등록된 종목 보기")
     lst.add_argument("--portfolio", default=str(DEFAULT_PORTFOLIO_PATH))
+
+    status = sub.add_parser("status", help="보유 종목 현재가·손익을 JSON 으로 출력 (AI 호출 없음)")
+    status.add_argument("--portfolio", default=str(DEFAULT_PORTFOLIO_PATH))
 
     return parser.parse_args(argv)
 
@@ -139,9 +143,20 @@ def cmd_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_status(args: argparse.Namespace) -> int:
+    """모델 없이 데이터만 출력한다. 구독 방식(루틴)에서 Claude Code 가 이 결과를 읽는다."""
+    import json
+
+    status = Portfolio(args.portfolio).status(MarketData())
+    print(json.dumps(status, ensure_ascii=False, indent=2))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    return {"chat": cmd_chat, "morning": cmd_morning, "add": cmd_add, "watch": cmd_watch, "list": cmd_list}[args.command](args)
+    commands = {"chat": cmd_chat, "morning": cmd_morning, "add": cmd_add, "watch": cmd_watch,
+                "list": cmd_list, "status": cmd_status}
+    return commands[args.command](args)
 
 
 if __name__ == "__main__":

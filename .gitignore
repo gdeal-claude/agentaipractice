@@ -7,4 +7,5 @@ dist/
 build/
 .env
 .agent_memory.json
+data/memory.json
 workspace/
